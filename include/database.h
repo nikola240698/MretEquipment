@@ -17,11 +17,21 @@ public:
     void close();
     // проверяем состояние БД
     bool isOpen() const;
-    // получаем содеинение с БД
-    QSqlDatabase database() const;
+    // получаем соединение с БД
+    QSqlDatabase getDatabase() const;
 
     // получаем путь БД для внешнего использования
     QString databasePath() const;
+    // метод начала транзакции
+    bool transaction();
+    // метод коммита изменений
+    bool commit();
+    // метод отката изменений
+    bool rollback();
+
+    // метод получения ошибки
+    QString lastError() const;
+
 
 private:
     // Создаем БД

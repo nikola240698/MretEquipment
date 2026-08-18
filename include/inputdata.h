@@ -16,6 +16,7 @@
 #include <QSqlError>
 // подключаем класс БД
 #include "database.h"
+#include <QList>
 
 namespace Ui {
 class InputData;
@@ -31,9 +32,12 @@ public:
 
     // методы геттер для получения текста с полей
     QString getName() const;
-    QString getVoltage() const;
 
+    // метод получения индекса предприятия
     int getMaintanceId() const;
+
+    // метод получения уровней напряжения
+    QList<int> getVoltage() const;
 
 private slots:
     void on_btnClose_clicked();

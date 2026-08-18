@@ -61,7 +61,7 @@ bool Database::isOpen() const
 }
 
 // метод получения БД
-QSqlDatabase Database::database() const
+QSqlDatabase Database::getDatabase() const
 {
     return db;
 }
@@ -70,6 +70,30 @@ QSqlDatabase Database::database() const
 QString Database::databasePath() const
 {
     return db.databaseName();
+}
+
+// метод начала транзакции
+bool Database::transaction()
+{
+    return db.transaction();
+}
+
+// метод коммита изменений
+bool Database::commit()
+{
+    return db.commit();
+}
+
+// метод отката изменений
+bool Database::rollback()
+{
+    return db.rollback();
+}
+
+// метод получения последней ошибки
+QString Database::lastError() const
+{
+    return db.lastError().text();
 }
 
 // приватный метод получения пути к БД

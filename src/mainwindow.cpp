@@ -41,15 +41,6 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
     {
         ui->statusbar->showMessage("Database doesn't open");
     }
-
-
-
-
-
-
-
-
-
 }
 
 MainWindow::~MainWindow()
@@ -100,36 +91,76 @@ void MainWindow::on_btnAddData_clicked()
     // делаем диалоговое окно модальным, чтобы не позволяло взаимодейтсвоавть с основным окном
     dialog.setModal(true);
     // вызываем диалоговое окно как исполняемое с проверкой успшного выполнения
-    if (dialog.exec() == QDialog::Accepted)
+    if (dialog.exec() != QDialog::Accepted)
+        return;
+
+    // Получаем данные из диалогового окна
+    int maintanceId = dialog.getMaintanceId();
+    QString name = dialog.getName();
+
+    QList<int> voltages = dialog.getVoltage();
+
+    // начинаем транзакцию
+    if (!db->transaction())
     {
-        // получаем id из списка предприятий
-        int maintanceId = dialog.getMaintanceId();
-        // получаем данные из строк
-        QString name = dialog.getName();
-        QString voltage = dialog.getVoltage();
-
-        // создаем динамический запрос
-        QSqlQuery *query = new QSqlQuery();
-
-        // подготавливаем запрос с заполнениями по полям
-        query->prepare("INSERT INTO SUBSTATIONS (maintance_id, name, voltage_level) VALUES (:f1, :f2, :f3)");
-
-        // Привязываем значения к меткам (позиционная привязка или по именам)
-        query->bindValue(":f1", maintanceId);
-        query->bindValue(":f2", name);
-        query->bindValue(":f3", voltage);
-
-        // Выполняем запрос
-        if (query->exec()) {
-            ui->statusbar->showMessage("Data added successfully");
-        } else {
-            QMessageBox::critical(this, "Error", "Error adding record:\n" + query->lastError().text());
-        }
-
-        query->finish();
-
-        updateTable();
+        qDebug() << "Transaction doesn't start: " << db->lastError();
+        return;
     }
+
+    // добавляем подстанцию
+    QSqlQuery substationQuery(db->getDatabase());
+
+    substationQuery.prepare("INSERT INTO substations "
+                            "(maintance_id, name) "
+                            "VALUES (:maintance_id, :name)");
+
+    substationQuery.bindValue(":maintance_id", maintanceId);
+    substationQuery.bindValue(":name", name);
+
+
+    if (!substationQuery.exec())
+    {
+        qDebug() << "Error adding substation: " << substationQuery.lastError().text();
+
+        db->rollback();
+        return;
+    }
+
+    // Получаем ID подстанции
+    int substationId = substationQuery.lastInsertId().toInt();
+
+    // запрос на добавление напряжений
+    QSqlQuery voltageQuery(db->getDatabase());
+
+    voltageQuery.prepare("INSERT INTO substation_voltages "
+                         "(substation_id, voltage_level) "
+                         "VALUES (:substation_id, :voltage)");
+
+    for (int voltage : voltages)
+    {
+        voltageQuery.bindValue(":substation_id", substationId);
+
+        voltageQuery.bindValue(":voltage", voltage);
+
+        if (!voltageQuery.exec())
+        {
+            qDebug() << "Error voltage adding: " << voltageQuery.lastError().text();
+
+            db->rollback();
+            return;
+        }
+    }
+
+    // фиксируем транзакцию
+    if (!db->commit())
+    {
+        qDebug() << "Commit error: " << db->lastError();
+
+        db->rollback();
+        return;
+    }
+
+    updateTable();
 }
 
 // метод вызова вывода необходимого содержания БД
@@ -137,11 +168,15 @@ void MainWindow::updateTable() const
 {
     QSqlQuery query;
 
-
-    query.prepare("SELECT m.name, s.name, s.voltage_level "
-                       "FROM SUBSTATIONS s "
-                       "LEFT JOIN MAINTANCE m "
-                       "ON s.maintance_id = m.id;");
+    query.prepare("SELECT m.name, s.name, GROUP_CONCAT(sv.voltage_level || ' кВ', ', ') "
+                  "FROM substations s "
+                  "LEFT JOIN maintance m "
+                  "ON s.maintance_id = m.id "
+                  "LEFT JOIN substation_voltages sv "
+                  "ON s.id = sv.substation_id "
+                  "GROUP BY s.id "
+                  "ORDER BY m.name;"
+                  );
 
     // Выполняем запрос
     if (query.exec()) {

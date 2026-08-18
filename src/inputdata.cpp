@@ -15,7 +15,7 @@ InputData::InputData(QWidget *parent)
 
     //  очищаем поля ввода данных
     ui->ledtName->clear();
-    ui->ledtVoltage->clear();
+
 
     //фокусируемся на первом LineEdit
     ui->ledtName->setFocus();
@@ -40,16 +40,32 @@ QString InputData::getName() const
     return ui->ledtName->text();
 }
 
-// получаем текст из ledtVoltage
-QString InputData::getVoltage() const
-{
-    return ui->ledtVoltage->text();
-}
+
 
 // получаем Id предприятия из списка
 int InputData::getMaintanceId() const
 {
     return ui->maintanceBox->currentData().toInt();
+}
+
+// метод получения уровней напряжения из чекбоксов
+QList<int> InputData::getVoltage() const
+{
+    // создаем список
+    QList<int> voltages;
+    // проверяем каждый чекбокс
+    if (ui->chbx220->isChecked())
+        voltages.append(220);
+    if (ui->chbx110->isChecked())
+        voltages.append(110);
+    if (ui->chbx35->isChecked())
+        voltages.append(35);
+    if (ui->chbx10->isChecked())
+        voltages.append(10);
+    if (ui->chbx6->isChecked())
+        voltages.append(6);
+
+    return voltages;
 }
 
 
@@ -72,20 +88,21 @@ void InputData::on_btnSave_clicked()
         isOk = false;
         ui->lblName->setText("Not be null");
     }
-    // проверяем третью строку
-    if (getVoltage() == "")
+
+    // получаем список выбранных уровней напряжения
+    QList<int> voltages = getVoltage();
+    // проверяем что выбрано минимум два уровня напряжения
+    if (voltages.size() < 2)
     {
         isOk = false;
-        ui->lblVoltage->setText("Not be null");
+
+        QMessageBox::warning(this, "Voltage level", "Should be checked minimum 2 level of voltage");
     }
     // если всё хорошо, то закрываем успешно окно
     if (isOk)
     {
         accept();
     }
-
-
-
 }
 
 // метод заполнения MaintanceBox используя запрос БД
