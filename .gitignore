@@ -1,0 +1,5 @@
+build/
+_gsdata_
+.qtcreator/
+.git/
+.idea/
