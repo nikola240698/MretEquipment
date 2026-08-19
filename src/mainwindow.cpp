@@ -168,19 +168,24 @@ void MainWindow::updateTable() const
 {
     QSqlQuery query;
 
-    query.prepare("SELECT m.name, s.name, GROUP_CONCAT(sv.voltage_level || ' кВ', ', ') "
-                  "FROM substations s "
-                  "LEFT JOIN maintance m "
-                  "ON s.maintance_id = m.id "
-                  "LEFT JOIN substation_voltages sv "
-                  "ON s.id = sv.substation_id "
-                  "GROUP BY s.id "
-                  "ORDER BY m.name;"
+    query.prepare("SELECT m.name, s.name, ("
+	                "SELECT GROUP_CONCAT(voltage_level, '/') "
+	               "FROM ("
+		                "SELECT voltage_level "
+		                "FROM substation_voltages sv "
+		                "WHERE substation_id = s.id "
+		                "ORDER BY voltage_level DESC "
+		                ")"
+	                ") || ' кВ' AS voltages "
+	                "FROM substations s "
+	                "LEFT JOIN maintance m "
+	                "ON s.maintance_id = m.id "
+	                "ORDER BY s.name;"
                   );
 
     // Выполняем запрос
     if (query.exec()) {
-        qDebug() << "Database read succesfully";
+        qDebug() << "Database read successfully";
 
     } else {
         qDebug() << "Error reading record:\n" + query.lastError().text();
