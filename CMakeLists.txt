@@ -5,8 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED  20)
 
 
-set(CMAKE_PREFIX_PATH "D:/Qt6/6.11.1/mingw_64/lib/cmake")
-
 set(MY_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
 find_package(Qt6 COMPONENTS
