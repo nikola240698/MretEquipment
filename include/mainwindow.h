@@ -33,13 +33,11 @@ public:
     ~MainWindow() override;
 
 private slots:
-    void on_btnAdd_clicked();
 
-    void on_btnRemove_clicked();
 
     void on_tableView_clicked(const QModelIndex &index);
 
-    void on_btnRefresh_clicked();
+    void onEnterpriseChanged(int index);
 
     void on_btnAddData_clicked();
 
@@ -55,6 +53,8 @@ private:
 
 
     void updateTable() const;
+
+    void loadSubstations(int enterpriseId);
 
 
 

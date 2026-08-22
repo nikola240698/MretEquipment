@@ -9,61 +9,66 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
     ui->setupUi(this);
 
 
-
-
-
     if (db->isOpen())
     {
         // выводим сообщение в статусБар
         ui->statusbar->showMessage("Successful connect to DB: " + db->databasePath());
-
         // создаем динамическую модель БД, указав родителя
         model = new QSqlQueryModel(this);
-
         // обновляем данные таблицы
         updateTable();
-
         // указываем куда будем выводить данные
         ui->tableView->setModel(model);
-
         // выделяем всю строку, а не отдельно ячейку при нажатии мышью
         ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-
         //запрещаем редактирование
         ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-
         // разрешаем сортировку по столбцам
         ui->tableView->setSortingEnabled(true);
-
         // изменяем размер столбцов таблицы
         ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     } else
     {
         ui->statusbar->showMessage("Database doesn't open");
     }
+
+    // выводим список предприятий в QComboBox
+    // очищаем наш список
+    ui->enterpriseBox->clear();
+    // выводим надпись для просьбы выбрать предприятие
+    ui->enterpriseBox->addItem("Выберите предприятие...", QVariant());
+    // создаем запрос
+    QSqlQuery enterpriseQuery(db->getDatabase());
+    // проверяем, что запрос успешно выполняется
+    if (!enterpriseQuery.exec("SELECT id, name FROM enterprise ORDER BY id;"))
+    {
+        QMessageBox::critical(this, "Error", "There are not the list of enterprise:\n"
+                                                 + enterpriseQuery.lastError().text());
+        return;
+    }
+    // начинаем читать ответ на запрос поочередно
+    while (enterpriseQuery.next())
+    {
+        // достаем id строки
+        int id = enterpriseQuery.value(0).toInt();
+        // достаем название предприятия
+        QString name = enterpriseQuery.value(1).toString();
+        // добавляем все найденные записи в выпадающий список
+        ui->enterpriseBox->addItem(name, id);
+    }
+
+    // подключаем слот выбора предприятия
+    connect(ui->enterpriseBox, &QComboBox::currentIndexChanged, this, &MainWindow::onEnterpriseChanged);
+
 }
 
 MainWindow::~MainWindow()
 {
-
     delete ui;
 }
 
-// слот(метод) нажатия кнопки "Add"
-void MainWindow::on_btnAdd_clicked()
-{
-    // осуществляем добавление строки передавая количество строк
-    model->insertRow(model->rowCount());
-}
 
-// слот(метод) нажатия кнопки "Remove"
-void MainWindow::on_btnRemove_clicked()
-{
-    // удаляем строку по индексу
-    model->removeRow(currentRow);
-    // снова вызываем запрос для обновления данных
-    updateTable();
-}
+
 
 // слот(метод) нажатия на TableView для опередедлния индкса текущей строки
 void MainWindow::on_tableView_clicked(const QModelIndex &index)
@@ -73,14 +78,28 @@ void MainWindow::on_tableView_clicked(const QModelIndex &index)
 
 }
 
-// слот(метод) нажатия кнопки "Refresh"
-void MainWindow::on_btnRefresh_clicked()
+void MainWindow::onEnterpriseChanged(int index)
 {
-    // запрос на прочтение новых данных
-    updateTable();
-    // выделяем последний раз вбранную строку
-    ui->tableView->selectRow(currentRow);
+    // проверяем, что выбрали предприятие а не надпись выберите предприятие
+    if (!ui->enterpriseBox->itemData(index).isValid())
+        return;
+    // получаем id предприятия из списка
+    int enterpriseId = ui->enterpriseBox->currentData().toInt();
+    qDebug() << enterpriseId;
+    // загружаем подстанциии выбранного предприятия
+    loadSubstations(enterpriseId);
+    // проверяем, что в списке ещё есть строка "Выберите предприятие..."
+    if (!ui->enterpriseBox->itemData(0).isValid())
+    {
+        // блокируем смещение id списка для контроля правильности ввода индексов
+        ui->enterpriseBox->blockSignals(true);
+        // удаляем не нужную строку просьбы выбора
+        ui->enterpriseBox->removeItem(0);
+        // нимаем блокировку
+        ui->enterpriseBox->blockSignals(false);
+    }
 }
+
 
 // слот(метод) нажатия кнопки "Add Data"
 void MainWindow::on_btnAddData_clicked()
@@ -205,6 +224,49 @@ void MainWindow::updateTable() const
 
 
 
+
+}
+
+void MainWindow::loadSubstations(int enterpriseId)
+{
+    ui->substationBox->clear();
+
+    QSqlQuery substationQuery(db->getDatabase());
+
+    substationQuery.prepare("SELECT "
+        "s.id, "
+        "s.name || ' ' || ( "
+            "SELECT GROUP_CONCAT(voltage_level, '/') "
+            "FROM ( "
+                "SELECT voltage_level "
+                "FROM substation_voltages "
+                "WHERE substation_id = s.id "
+                "ORDER BY CAST(voltage_level AS INTEGER) DESC "
+            ") "
+        ") || ' кВ' AS name "
+    "FROM substations s "
+    "WHERE s.enterprise_id = :enterpriseId "
+    "ORDER BY s.name"
+    );
+
+    substationQuery.bindValue(":enterpriseId", enterpriseId);
+
+    if (!substationQuery.exec())
+    {
+        qDebug() << substationQuery.lastError().text();
+        return;
+    }
+
+    ui->substationBox->addItem("Выберите подстанцию...", QVariant());
+
+    while (substationQuery.next())
+    {
+        int id = substationQuery.value("id").toInt();
+        QString name = substationQuery.value("name").toString();
+
+        ui->substationBox->addItem(name, id);
+
+    }
 
 }
 
