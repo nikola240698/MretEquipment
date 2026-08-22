@@ -3,6 +3,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+
+
+
 # Создаем исполняемый файл
 add_executable(MretEquipment
         main.cpp
@@ -10,8 +13,8 @@ add_executable(MretEquipment
         inputdata.cpp
         database.cpp
 
-        inputdata.ui
-        mainwindow.ui
+        ${MY_UI_DIR}/inputdata.ui
+        ${MY_UI_DIR}/mainwindow.ui
 
         ${MY_INCLUDE_DIR}/mainwindow.h
         ${MY_INCLUDE_DIR}/inputdata.h
@@ -19,7 +22,7 @@ add_executable(MretEquipment
 )
 
 # Подключаем папку include, заданную в корневом CMakeLists.txt
-target_include_directories(MretEquipment PRIVATE ${MY_INCLUDE_DIR})
+target_include_directories(MretEquipment PRIVATE ${MY_INCLUDE_DIR} ${MY_UI_DIR})
 
 # указываем нашему проекту корневую папку размещения проекта на диске
 target_compile_definitions(MretEquipment PRIVATE

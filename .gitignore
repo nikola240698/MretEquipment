@@ -3,3 +3,5 @@ _gsdata_
 .qtcreator/
 .git/
 .idea/
+
+*.sqbpro
