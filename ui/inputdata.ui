@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>294</height>
+    <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -67,7 +67,7 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <widget class="QComboBox" name="maintanceBox"/>
+      <widget class="QComboBox" name="enterpriseBox"/>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="label_2">
@@ -147,7 +147,7 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>maintanceBox</tabstop>
+  <tabstop>enterpriseBox</tabstop>
   <tabstop>ledtName</tabstop>
   <tabstop>chbx220</tabstop>
   <tabstop>chbx110</tabstop>

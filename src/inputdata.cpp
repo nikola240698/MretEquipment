@@ -21,9 +21,9 @@ InputData::InputData(QWidget *parent)
     ui->ledtName->setFocus();
 
     // загружаем данные из БД для списка предприятий
-    loadMaintanceName();
+    loadEnterpriseName();
 
-    // Связываем кнопку "Save" со слотом принятиe результата диалога (QDialog::accept)
+    // Связываем кнопку "Save" со слотом принятия результата диалога (QDialog::accept)
     connect(ui->btnSave, &QPushButton::clicked, this, &InputData::on_btnSave_clicked);
 }
 
@@ -43,9 +43,9 @@ QString InputData::getName() const
 
 
 // получаем Id предприятия из списка
-int InputData::getMaintanceId() const
+int InputData::getEnterpriseId() const
 {
-    return ui->maintanceBox->currentData().toInt();
+    return ui->enterpriseBox->currentData().toInt();
 }
 
 // метод получения уровней напряжения из чекбоксов
@@ -105,31 +105,31 @@ void InputData::on_btnSave_clicked()
     }
 }
 
-// метод заполнения MaintanceBox используя запрос БД
-void InputData::loadMaintanceName()
+// метод заполнения enterpriseBox используя запрос БД
+void InputData::loadEnterpriseName()
 {
     // очищаем наш список
-    ui->maintanceBox->clear();
+    ui->enterpriseBox->clear();
 
-    // оздаем запрос
-    QSqlQuery maintanceQuery;
+    // создаем запрос
+    QSqlQuery enterpriseQuery;
     // проверяем, что запрос успешно выполняется
-    if (!maintanceQuery.exec("SELECT id, name FROM MAINTANCE ORDER BY id;"))
+    if (!enterpriseQuery.exec("SELECT id, name FROM enterprise ORDER BY id;"))
     {
-        QMessageBox::critical(this, "Error", "There are not the list of maintnace:\n"
-                                                 + maintanceQuery.lastError().text());
+        QMessageBox::critical(this, "Error", "There are not the list of enterprises:\n"
+                                                 + enterpriseQuery.lastError().text());
         return;
     }
 
     // начинаем читать ответ на запрос поочередно
-    while (maintanceQuery.next())
+    while (enterpriseQuery.next())
     {
         // достаем id строки
-        int id = maintanceQuery.value(0).toInt();
+        int id = enterpriseQuery.value(0).toInt();
         // достаем название предприятия
-        QString name = maintanceQuery.value(1).toString();
+        QString name = enterpriseQuery.value(1).toString();
         // доавляем все найденные записи в выпадающий список
-        ui->maintanceBox->addItem(name, id);
+        ui->enterpriseBox->addItem(name, id);
     }
 }
 

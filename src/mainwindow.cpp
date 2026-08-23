@@ -9,24 +9,25 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
     ui->setupUi(this);
 
 
+
     if (db->isOpen())
     {
         // выводим сообщение в статусБар
         ui->statusbar->showMessage("Successful connect to DB: " + db->databasePath());
         // создаем динамическую модель БД, указав родителя
-        model = new QSqlQueryModel(this);
+        connectionModel = new QSqlQueryModel(this);
         // обновляем данные таблицы
         updateTable();
         // указываем куда будем выводить данные
-        ui->tableView->setModel(model);
+        ui->connectionsView->setModel(connectionModel);
         // выделяем всю строку, а не отдельно ячейку при нажатии мышью
-        ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui->connectionsView->setSelectionBehavior(QAbstractItemView::SelectRows);
         //запрещаем редактирование
-        ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui->connectionsView->setSelectionBehavior(QAbstractItemView::SelectRows);
         // разрешаем сортировку по столбцам
-        ui->tableView->setSortingEnabled(true);
+        ui->connectionsView->setSortingEnabled(true);
         // изменяем размер столбцов таблицы
-        ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        ui->connectionsView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     } else
     {
         ui->statusbar->showMessage("Database doesn't open");
@@ -62,7 +63,7 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
     // подключем слот выбора подстанции
     connect(ui->substationBox, &QComboBox::currentIndexChanged, this, &MainWindow::onSubstationChanged);
     // етод двойного нажатия на строку в таблице
-    connect(ui->tableView, &QTableView::doubleClicked, this, &MainWindow::onConnectionDoubleClicked);
+    connect(ui->connectionsView, &QTableView::doubleClicked, this, &MainWindow::onConnectionDoubleClicked);
 }
 
 MainWindow::~MainWindow()
@@ -74,7 +75,7 @@ MainWindow::~MainWindow()
 
 
 // слот(метод) нажатия на TableView для опередедлния индкса текущей строки
-void MainWindow::on_tableView_clicked(const QModelIndex &index)
+void MainWindow::on_connectionsView_clicked(const QModelIndex &index)
 {
     // сохраняем индекс строки
     currentRow = index.row();
@@ -131,7 +132,7 @@ void MainWindow::on_btnAddData_clicked()
         return;
 
     // Получаем данные из диалогового окна
-    int maintanceId = dialog.getMaintanceId();
+    int eterpriseId = dialog.getEnterpriseId();
     QString name = dialog.getName();
 
     QList<int> voltages = dialog.getVoltage();
@@ -147,10 +148,10 @@ void MainWindow::on_btnAddData_clicked()
     QSqlQuery substationQuery(db->getDatabase());
 
     substationQuery.prepare("INSERT INTO substations "
-                            "(maintance_id, name) "
-                            "VALUES (:maintance_id, :name)");
+                            "(enterprise_id, name) "
+                            "VALUES (:enterprise_id, :name)");
 
-    substationQuery.bindValue(":maintance_id", maintanceId);
+    substationQuery.bindValue(":enterprise_id", eterpriseId);
     substationQuery.bindValue(":name", name);
 
 
@@ -229,14 +230,14 @@ void MainWindow::updateTable() const
     }
 
     // передаем в модель получившуюся таблицу
-    model->setQuery(std::move(query));
+    connectionModel->setQuery(std::move(query));
 
     // меняем названия столбцов
-    model->setHeaderData(
+    connectionModel->setHeaderData(
         0, Qt::Horizontal, "Предприятие");
-    model->setHeaderData(
+    connectionModel->setHeaderData(
         1, Qt::Horizontal, "Название ПС");
-    model->setHeaderData(
+    connectionModel->setHeaderData(
         2, Qt::Horizontal, "Напряжение");
 
 
@@ -310,13 +311,13 @@ void MainWindow::loadConnections(int substationId) const
         return;
     }
     // вставляем резульат в окно
-    model->setQuery(std::move(connectionQuery));
+    connectionModel->setQuery(std::move(connectionQuery));
     // задаем названия столбцам
-    model->setHeaderData(1, Qt::Horizontal, "Тип");
-    model->setHeaderData(2, Qt::Horizontal, "Наименоваание");
-    model->setHeaderData(3, Qt::Horizontal, "U, кВ");
+    connectionModel->setHeaderData(1, Qt::Horizontal, "Тип");
+    connectionModel->setHeaderData(2, Qt::Horizontal, "Наименоваание");
+    connectionModel->setHeaderData(3, Qt::Horizontal, "U, кВ");
     // скрываем столбец id
-    ui->tableView->setColumnHidden(0, true);
+    ui->connectionsView->setColumnHidden(0, true);
 }
 // метод двойного нажатия на присоединение из списка
 void MainWindow::onConnectionDoubleClicked(const QModelIndex &index) const
@@ -324,7 +325,7 @@ void MainWindow::onConnectionDoubleClicked(const QModelIndex &index) const
     // получаем индекс строки
     int row = index.row();
     // получем индекс присоединения из нашего списка в прятанном столбце
-    int connectionId = model->data(model->index(row, 0)).toInt();
+    int connectionId = connectionModel->data(connectionModel->index(row, 0)).toInt();
     // выводим ссобщени о выбранном присоединении
     qDebug() << "Opening connection: " << connectionId;
 }

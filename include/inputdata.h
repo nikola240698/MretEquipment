@@ -34,7 +34,7 @@ public:
     QString getName() const;
 
     // метод получения индекса предприятия
-    int getMaintanceId() const;
+    int getEnterpriseId() const;
 
     // метод получения уровней напряжения
     QList<int> getVoltage() const;
@@ -47,7 +47,7 @@ private slots:
 private:
     Ui::InputData *ui;
 
-    void loadMaintanceName();
+    void loadEnterpriseName();
 
 
 

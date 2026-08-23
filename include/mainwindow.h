@@ -34,8 +34,8 @@ public:
 
 private slots:
 
-    // выбор объекта в строке tableView
-    void on_tableView_clicked(const QModelIndex &index);
+    // выбор объекта в строке connectView
+    void on_connectionsView_clicked(const QModelIndex &index);
     // слот выбора предприятия
     void onEnterpriseChanged(int index);
     // слот выбора подстанции
@@ -49,7 +49,7 @@ private:
     //  создаем указатель на базу данных
     Database *db;
     // указатель на TableView для отображения БД
-    QSqlQueryModel *model;
+    QSqlQueryModel *connectionModel;
     //переменная для определения номера текущей строки
     int currentRow;
 
