@@ -12,13 +12,19 @@ add_executable(MretEquipment
         mainwindow.cpp
         inputdata.cpp
         database.cpp
+        inputconnection.cpp
+        inputsubstation.cpp
 
         ${MY_UI_DIR}/inputdata.ui
         ${MY_UI_DIR}/mainwindow.ui
+        ${MY_UI_DIR}/inputconnection.ui
+        ${MY_UI_DIR}/inputsubstation.ui
 
         ${MY_INCLUDE_DIR}/mainwindow.h
         ${MY_INCLUDE_DIR}/inputdata.h
         ${MY_INCLUDE_DIR}/database.h
+        ${MY_INCLUDE_DIR}/inputconnection.h
+        ${MY_INCLUDE_DIR}/inputsubstation.h
 )
 
 # Подключаем папку include, заданную в корневом CMakeLists.txt
@@ -36,6 +42,6 @@ target_link_libraries(MretEquipment PRIVATE
         Qt6::Gui
         Qt6::Widgets
         Qt6::Sql
-        # SQLite::SQLite3 # Раскомментируйте, только если используете прямую библиотеку SQLite3
+
 )
 

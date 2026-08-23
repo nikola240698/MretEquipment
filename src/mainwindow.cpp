@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
+#include "ui_mainwindow.h"
 
 #include <QDebug>
 
@@ -64,6 +64,8 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
     connect(ui->substationBox, &QComboBox::currentIndexChanged, this, &MainWindow::onSubstationChanged);
     // етод двойного нажатия на строку в таблице
     connect(ui->connectionsView, &QTableView::doubleClicked, this, &MainWindow::onConnectionDoubleClicked);
+
+
 }
 
 MainWindow::~MainWindow()
@@ -123,7 +125,7 @@ void MainWindow::onSubstationChanged(int index)
 void MainWindow::on_btnAddData_clicked()
 {
     //создаем объект диалогового окна
-    InputData dialog(this);
+    InputSubstation dialog(this);
 
     // делаем диалоговое окно модальным, чтобы не позволяло взаимодейтсвоавть с основным окном
     dialog.setModal(true);
@@ -198,6 +200,25 @@ void MainWindow::on_btnAddData_clicked()
     }
 
     updateTable();
+}
+
+void MainWindow::on_btnAddConnection_clicked()
+{
+    QVariant data = ui->substationBox->currentData();
+
+    if (!data.isValid())
+    {
+        QMessageBox::warning(this, "Substation", "First select the substation");
+        return;
+    }
+
+    int substationId = data.toInt();
+
+    InputConnection dialog(substationId, db, this);
+
+    if (dialog.exec() == QDialog::Accepted)
+    {}
+    loadConnections(substationId);
 }
 
 // метод вызова вывода необходимого содержания БД

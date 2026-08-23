@@ -1,9 +1,8 @@
-#include "inputdata.h"
-#include "ui_inputdata.h"
+#include "inputsubstation.h"
+#include "ui_inputsubstation.h"
 
-InputData::InputData(QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::InputData)
+
+InputSubstation::InputSubstation(QWidget *parent) : QDialog(parent), ui(new Ui::InputSubstation)
 {
     ui->setupUi(this);
 
@@ -23,37 +22,33 @@ InputData::InputData(QWidget *parent)
     // загружаем данные из БД для списка предприятий
     loadEnterpriseName();
 
-    // Связываем кнопку "Save" со слотом принятия результата диалога (QDialog::accept)
-    connect(ui->btnSave, &QPushButton::clicked, this, &InputData::on_btnSave_clicked);
+
+
 }
 
-InputData::~InputData()
+InputSubstation::~InputSubstation()
 {
     delete ui;
 }
-
-
-
 // получаем текст из ledtName
-QString InputData::getName() const
+QString InputSubstation::getName() const
 {
     return ui->ledtName->text();
 }
 
-
-
-
-int InputData::getEnterpriseId() const
+// получаем Id предприятия из списка
+int InputSubstation::getEnterpriseId() const
 {
     return ui->enterpriseBox->currentData().toInt();
 }
 
 // метод получения уровней напряжения из чекбоксов
-QList<int> InputData::getVoltage() const
+QList<int> InputSubstation::getVoltage() const
 {
     // создаем список
     QList<int> voltages;
-    // проверяем каждый чекбокс
+    // проверяем
+    // каждый чекбокс
     if (ui->chbx220->isChecked())
         voltages.append(220);
     if (ui->chbx110->isChecked())
@@ -68,16 +63,15 @@ QList<int> InputData::getVoltage() const
     return voltages;
 }
 
-
 // слот обработки нажатия кнопки "Close"
-void InputData::on_btnClose_clicked()
+void InputSubstation::on_btnClose_clicked()
 {
     // закрываем окно
     this->close();
 }
 
 // слот обработки нажатия кнопки "Save"
-void InputData::on_btnSave_clicked()
+void InputSubstation::on_btnSave_clicked()
 {
     // флаг проверки введенных данных
     bool isOk = true;
@@ -106,7 +100,7 @@ void InputData::on_btnSave_clicked()
 }
 
 // метод заполнения enterpriseBox используя запрос БД
-void InputData::loadEnterpriseName()
+void InputSubstation::loadEnterpriseName()
 {
     // очищаем наш список
     ui->enterpriseBox->clear();
@@ -132,19 +126,3 @@ void InputData::loadEnterpriseName()
         ui->enterpriseBox->addItem(name, id);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

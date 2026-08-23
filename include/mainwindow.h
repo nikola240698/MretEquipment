@@ -12,7 +12,9 @@
 #include <QSqlQuery>
 
 // подключаем диалоговое окно ввода данных
-#include "inputdata.h"
+#include "inputsubstation.h"
+
+#include "inputconnection.h"
 // подключаем класс базы данных
 #include "database.h"
 
@@ -42,6 +44,8 @@ private slots:
     void onSubstationChanged(int index);
     // слот нажатия на кнопку добавить
     void on_btnAddData_clicked();
+
+    void on_btnAddConnection_clicked();
 
 
 private:
