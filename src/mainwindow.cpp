@@ -59,7 +59,10 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
 
     // подключаем слот выбора предприятия
     connect(ui->enterpriseBox, &QComboBox::currentIndexChanged, this, &MainWindow::onEnterpriseChanged);
-
+    // подключем слот выбора подстанции
+    connect(ui->substationBox, &QComboBox::currentIndexChanged, this, &MainWindow::onSubstationChanged);
+    // етод двойного нажатия на строку в таблице
+    connect(ui->tableView, &QTableView::doubleClicked, this, &MainWindow::onConnectionDoubleClicked);
 }
 
 MainWindow::~MainWindow()
@@ -98,6 +101,20 @@ void MainWindow::onEnterpriseChanged(int index)
         // нимаем блокировку
         ui->enterpriseBox->blockSignals(false);
     }
+}
+
+// слот при выбор подстанции
+void MainWindow::onSubstationChanged(int index)
+{
+    // олучаем индекс списка подстанций
+    QVariant data = ui->substationBox->itemData(index);
+    // проверяем что выбрана именно подстанция, а не другое что-то
+    if (!data.isValid())
+        return;
+    // получаем индекс самой подстанции
+    int substationId = data.toInt();
+    // загружаем присоединения подстанции
+    loadConnections(substationId);
 }
 
 
@@ -227,46 +244,88 @@ void MainWindow::updateTable() const
 
 }
 
+// метод загрузки списка подстанций
 void MainWindow::loadSubstations(int enterpriseId)
 {
+    // очищаем существующий список
     ui->substationBox->clear();
-
+    // создаем запрос
     QSqlQuery substationQuery(db->getDatabase());
-
+    // подготавливаем запрос
     substationQuery.prepare("SELECT "
-        "s.id, "
-        "s.name || ' ' || ( "
-            "SELECT GROUP_CONCAT(voltage_level, '/') "
-            "FROM ( "
-                "SELECT voltage_level "
-                "FROM substation_voltages "
-                "WHERE substation_id = s.id "
-                "ORDER BY CAST(voltage_level AS INTEGER) DESC "
-            ") "
-        ") || ' кВ' AS name "
-    "FROM substations s "
-    "WHERE s.enterprise_id = :enterpriseId "
-    "ORDER BY s.name"
-    );
-
+                                    "s.id, "
+                                    "s.name || ' ' || ( "
+                                        "SELECT GROUP_CONCAT(voltage_level, '/') "
+                                        "FROM ( "
+                                            "SELECT voltage_level "
+                                            "FROM substation_voltages "
+                                            "WHERE substation_id = s.id "
+                                            "ORDER BY CAST(voltage_level AS INTEGER) DESC "
+                                        ") "
+                                    ") || ' кВ' AS name "
+                                "FROM substations s "
+                                "WHERE s.enterprise_id = :enterpriseId "
+                                "ORDER BY s.name"
+                                );
+    // заполняем запрос данными
     substationQuery.bindValue(":enterpriseId", enterpriseId);
-
+    // пробуем выполнить запрос
     if (!substationQuery.exec())
     {
         qDebug() << substationQuery.lastError().text();
         return;
     }
-
+    // добавляем надпись просьбы выбора в список
     ui->substationBox->addItem("Выберите подстанцию...", QVariant());
-
+    // заполняем список нашими подстанциями
     while (substationQuery.next())
     {
         int id = substationQuery.value("id").toInt();
         QString name = substationQuery.value("name").toString();
-
         ui->substationBox->addItem(name, id);
-
     }
+}
 
+// метод вывода присоединений подстанции
+void MainWindow::loadConnections(int substationId) const
+{
+    // создаем запрос
+    QSqlQuery connectionQuery(db->getDatabase());
+    // подготавливаем запрос
+    connectionQuery.prepare("SELECT "
+                            "c.id, ct.name AS type, c.name, c.voltage_level "
+                            "FROM connections c "
+                            "LEFT JOIN connection_types ct "
+                            "ON c.type_id = ct.id "
+                            "WHERE c.substation_id = :substationId "
+                            "ORDER BY c.voltage_level DESC, c.name;"
+                            );
+    // вставляем данные в запрос
+    connectionQuery.bindValue(":substationId", substationId);
+    // пропбуем исполнить запрос
+    if (!connectionQuery.exec())
+    {
+        qDebug() << "Connection DB error:";
+        qDebug() << connectionQuery.lastError().text();
+        return;
+    }
+    // вставляем резульат в окно
+    model->setQuery(std::move(connectionQuery));
+    // задаем названия столбцам
+    model->setHeaderData(1, Qt::Horizontal, "Тип");
+    model->setHeaderData(2, Qt::Horizontal, "Наименоваание");
+    model->setHeaderData(3, Qt::Horizontal, "U, кВ");
+    // скрываем столбец id
+    ui->tableView->setColumnHidden(0, true);
+}
+// метод двойного нажатия на присоединение из списка
+void MainWindow::onConnectionDoubleClicked(const QModelIndex &index) const
+{
+    // получаем индекс строки
+    int row = index.row();
+    // получем индекс присоединения из нашего списка в прятанном столбце
+    int connectionId = model->data(model->index(row, 0)).toInt();
+    // выводим ссобщени о выбранном присоединении
+    qDebug() << "Opening connection: " << connectionId;
 }
 

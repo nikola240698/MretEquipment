@@ -34,11 +34,13 @@ public:
 
 private slots:
 
-
+    // выбор объекта в строке tableView
     void on_tableView_clicked(const QModelIndex &index);
-
+    // слот выбора предприятия
     void onEnterpriseChanged(int index);
-
+    // слот выбора подстанции
+    void onSubstationChanged(int index);
+    // слот нажатия на кнопку добавить
     void on_btnAddData_clicked();
 
 
@@ -51,13 +53,13 @@ private:
     //переменная для определения номера текущей строки
     int currentRow;
 
-
+    // метод обновдения таблицы
     void updateTable() const;
-
+    // меод загрузки подстанций при выборе предприятия
     void loadSubstations(int enterpriseId);
-
-
-
-
+    // метод загрузки присоединений
+    void loadConnections(int substationId) const;
+    //  етод двойного нажатия на присоединение из списка
+    void onConnectionDoubleClicked(const QModelIndex &index) const;
 };
 #endif // MAINWINDOW_H
