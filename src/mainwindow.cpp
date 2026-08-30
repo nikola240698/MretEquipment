@@ -8,8 +8,6 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
 {
     ui->setupUi(this);
 
-
-
     if (db->isOpen())
     {
         // выводим сообщение в статусБар
@@ -32,7 +30,6 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
     {
         ui->statusbar->showMessage("Database doesn't open");
     }
-
     // выводим список предприятий в QComboBox
     // очищаем наш список
     ui->enterpriseBox->clear();
@@ -60,12 +57,10 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
 
     // подключаем слот выбора предприятия
     connect(ui->enterpriseBox, &QComboBox::currentIndexChanged, this, &MainWindow::onEnterpriseChanged);
-    // подключем слот выбора подстанции
+    // подключаем слот выбора подстанции
     connect(ui->substationBox, &QComboBox::currentIndexChanged, this, &MainWindow::onSubstationChanged);
-    // етод двойного нажатия на строку в таблице
+    // метод двойного нажатия на строку в таблице
     connect(ui->connectionsView, &QTableView::doubleClicked, this, &MainWindow::onConnectionDoubleClicked);
-
-
 }
 
 MainWindow::~MainWindow()
@@ -76,7 +71,7 @@ MainWindow::~MainWindow()
 
 
 
-// слот(метод) нажатия на TableView для опередедлния индкса текущей строки
+// слот(метод) нажатия на TableView для определения индекса текущей строки
 void MainWindow::on_connectionsView_clicked(const QModelIndex &index)
 {
     // сохраняем индекс строки
@@ -86,7 +81,7 @@ void MainWindow::on_connectionsView_clicked(const QModelIndex &index)
 
 void MainWindow::onEnterpriseChanged(int index)
 {
-    // проверяем, что выбрали предприятие а не надпись выберите предприятие
+    // проверяем, что выбрали предприятие, а не надпись выберите предприятие
     if (!ui->enterpriseBox->itemData(index).isValid())
         return;
     // получаем id предприятия из списка
@@ -106,7 +101,7 @@ void MainWindow::onEnterpriseChanged(int index)
     }
 }
 
-// слот при выбор подстанции
+// слот при выборе подстанции
 void MainWindow::onSubstationChanged(int index)
 {
     // олучаем индекс списка подстанций
@@ -214,11 +209,13 @@ void MainWindow::on_btnAddConnection_clicked()
 
     int substationId = data.toInt();
 
+
     InputConnection dialog(substationId, db, this);
 
     if (dialog.exec() == QDialog::Accepted)
-    {}
-    loadConnections(substationId);
+    {
+        loadConnections(substationId);
+    }
 }
 
 // метод вызова вывода необходимого содержания БД
@@ -335,7 +332,7 @@ void MainWindow::loadConnections(int substationId) const
     connectionModel->setQuery(std::move(connectionQuery));
     // задаем названия столбцам
     connectionModel->setHeaderData(1, Qt::Horizontal, "Тип");
-    connectionModel->setHeaderData(2, Qt::Horizontal, "Наименоваание");
+    connectionModel->setHeaderData(2, Qt::Horizontal, "Наименование");
     connectionModel->setHeaderData(3, Qt::Horizontal, "U, кВ");
     // скрываем столбец id
     ui->connectionsView->setColumnHidden(0, true);
@@ -347,7 +344,9 @@ void MainWindow::onConnectionDoubleClicked(const QModelIndex &index) const
     int row = index.row();
     // получем индекс присоединения из нашего списка в прятанном столбце
     int connectionId = connectionModel->data(connectionModel->index(row, 0)).toInt();
-    // выводим ссобщени о выбранном присоединении
+    // выводим сообщение о выбранном присоединении
     qDebug() << "Opening connection: " << connectionId;
 }
+
+
 

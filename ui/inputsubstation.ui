@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>460</width>
-    <height>260</height>
+    <height>302</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,6 +43,9 @@
      </item>
      <item row="4" column="1">
       <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>8</number>
+       </property>
        <item>
         <widget class="QCheckBox" name="chbx220">
          <property name="text">

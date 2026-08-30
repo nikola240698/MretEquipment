@@ -46,9 +46,16 @@ private:
     Database *db;
     int substationId;
 
+    // метод загрузки типов присоединения
     void loadConnectionTypes() const;
-
+    // метод загрузки уровней напряжения
     void loadVoltageLevel() const;
+
+private slots:
+    // слот нажатия кнопки отмены
+    void on_btnClose_clicked();
+    // слот нажатия кнопки сохранения
+    void on_btnSave_clicked();
 
 };
 

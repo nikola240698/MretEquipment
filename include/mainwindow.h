@@ -45,6 +45,7 @@ private slots:
     // слот нажатия на кнопку добавить
     void on_btnAddData_clicked();
 
+
     void on_btnAddConnection_clicked();
 
 
