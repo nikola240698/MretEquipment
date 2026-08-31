@@ -98,7 +98,7 @@ void InputConnection::loadConnectionTypes()
         ui->typeBox->setItemData(index, id, Qt::UserRole);
 
         // проверяем может ли иметь несколько уровней напряжения
-        ui->typeBox->setItemData(index, id, Qt::UserRole);
+        ui->typeBox->setItemData(index, id, Qt::UserRole + 1);
 
         // обновляем интерфейс
         if (ui->typeBox->count() > 0)
@@ -158,7 +158,7 @@ void InputConnection::loadVoltageLevel()
         auto *checkBox = new QCheckBox(text, ui->voltageGroupBox);
 
         // получаем id строки
-        checkBox->setProperty("voltage_id", voltageId);
+        checkBox->setProperty("voltageId", voltageId);
 
         // добавляем виджет
         ui->voltageLayout->addWidget(checkBox);
@@ -228,7 +228,7 @@ void InputConnection::on_btnSave_clicked()
         return;
     }
 
-    const int typeId = ui->typeBox->currentData(Qt::UserRole + 1).toBool();
+    const int typeId = ui->typeBox->currentData(Qt::UserRole).toInt();
     const bool multipleVoltages = ui->typeBox->currentData(Qt::UserRole + 1).toBool();
 
     // получаем напряжение
