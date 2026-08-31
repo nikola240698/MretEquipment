@@ -6,14 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
-    <height>198</height>
+    <width>474</width>
+    <height>206</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>InputConnection</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
+   <item row="1" column="2">
+    <widget class="QPushButton" name="btnClose">
+     <property name="text">
+      <string>Close</string>
+     </property>
+    </widget>
+   </item>
    <item row="1" column="0">
     <spacer name="horizontalSpacer">
      <property name="orientation">
@@ -27,26 +34,27 @@
      </property>
     </spacer>
    </item>
-   <item row="1" column="1">
-    <widget class="QPushButton" name="btnSave">
-     <property name="text">
-      <string>Save</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="2">
-    <widget class="QPushButton" name="btnClose">
-     <property name="text">
-      <string>Close</string>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="0" colspan="3">
     <layout class="QGridLayout" name="gridLayout">
      <item row="2" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Наименование:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="ledtName"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLabel" name="label_4">
+       <property name="font">
+        <font>
+         <pointsize>5</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
@@ -65,6 +73,16 @@
        </property>
       </widget>
      </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Напряжение:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
@@ -75,30 +93,8 @@
      <item row="0" column="1">
       <widget class="QComboBox" name="typeBox"/>
      </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="ledtName"/>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLabel" name="label_4">
-       <property name="font">
-        <font>
-         <pointsize>5</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Напряжение:</string>
-       </property>
-      </widget>
-     </item>
      <item row="4" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_3">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QComboBox" name="voltageBox"/>
        </item>
@@ -107,11 +103,27 @@
          <property name="title">
           <string/>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <layout class="QVBoxLayout" name="voltageLayout">
+            <property name="sizeConstraint">
+             <enum>QLayout::SizeConstraint::SetMinAndMaxSize</enum>
+            </property>
+           </layout>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
      </item>
     </layout>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="btnSave">
+     <property name="text">
+      <string>Save</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

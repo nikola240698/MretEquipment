@@ -16,6 +16,7 @@
 // подключаем класс БД
 #include "database.h"
 #include <QList>
+#include <QTimer>
 
 
 QT_BEGIN_NAMESPACE

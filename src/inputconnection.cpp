@@ -18,6 +18,9 @@ InputConnection::InputConnection(
 {
     ui->setupUi(this);
 
+    // станавливаем возможность автоматического изменения размера окна при изменении параметров
+    layout()->setSizeConstraint(QLayout::SetFixedSize);
+
     // название окна
     setWindowTitle("Adding connection");
 
@@ -26,12 +29,10 @@ InputConnection::InputConnection(
     ui->voltageBox->hide();
     ui->voltageGroupBox->hide();
 
-
     // вызываем методы отображения данных по выбранной ПС
     // порядок из очень важен, сначала нам необходимы напряжения
     loadVoltageLevel();
     loadConnectionTypes();
-
 }
 
 // деструктор класса
@@ -43,19 +44,18 @@ InputConnection::~InputConnection()
 // слот выбора типа оборудования
 void InputConnection::on_typeBox_currentIndexChanged(int index)
 {
+    // проверяем на правильный индекс
     if (index < 0)
     {
-
         return;
     }
 
+    // проверяем много или один уровень напряжения у присоединения
     const bool multipleVoltages = ui->typeBox->itemData(index, Qt::UserRole + 1).toBool();
 
+    // изменяем показываемые поля при выборе одного или другого типа присоединения
     ui->voltageBox->setVisible(!multipleVoltages);
     ui->voltageGroupBox->setVisible(multipleVoltages);
-
-    adjustSize();
-    setFixedSize(sizeHint());
 }
 
 // метод загрузки типов присоединения
@@ -101,8 +101,6 @@ void InputConnection::loadConnectionTypes()
 
         // проверяем может ли иметь несколько уровней напряжения
         ui->typeBox->setItemData(index, multipleVoltages, Qt::UserRole + 1);
-
-
     }
     // обновляем интерфейс
     if (ui->typeBox->count() > 0)
@@ -147,11 +145,11 @@ void InputConnection::loadVoltageLevel()
     // заполняем выпадающий список данными из запроса
     while (voltageQuery.next())
     {
-
+        // получаем id оборудования
         const int voltageId = voltageQuery.value("id").toInt();
-
+        // получаем уровни напряжения
         const int voltage = voltageQuery.value("voltage_level").toInt();
-
+        // переводим уровень напряжение в текст
         const QString text = QString::number(voltage) + " кВ";
 
         // для списка напряжений
@@ -165,7 +163,7 @@ void InputConnection::loadVoltageLevel()
 
         // добавляем виджет
         ui->voltageLayout->addWidget(checkBox);
-
+        // добавляем чекбоксы
         voltageCheckBoxes.append(checkBox);
     }
 }
@@ -173,13 +171,14 @@ void InputConnection::loadVoltageLevel()
 // метод получения выбранного напряжения
 QList<int> InputConnection::getSelectedVoltageIds() const
 {
+    // создаем список id напряжений
     QList<int> voltageIds;
-
+    // переменная текущего индекса типа присоединения
     const int index = ui->typeBox->currentIndex();
-
+    // проверяем на правильный индекс
     if (index < 0)
         return voltageIds;
-
+    // переменная выбора количества уровней напряжения
     const bool multipleVoltages = ui->typeBox->itemData(index, Qt::UserRole + 1).toBool();
 
     // если одно напряжения
@@ -189,7 +188,6 @@ QList<int> InputConnection::getSelectedVoltageIds() const
         {
             voltageIds.append(ui->voltageBox->currentData().toInt());
         }
-
         return voltageIds;
     }
 
@@ -201,7 +199,6 @@ QList<int> InputConnection::getSelectedVoltageIds() const
             voltageIds.append(checkBox->property("voltageId").toInt());
         }
     }
-
     return voltageIds;
 }
 
@@ -216,7 +213,6 @@ void InputConnection::on_btnClose_clicked()
 void InputConnection::on_btnSave_clicked()
 {
     // проверка названия
-
     const QString name = ui->ledtName->text().trimmed();
     if (name.isEmpty())
     {
