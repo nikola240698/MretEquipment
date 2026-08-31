@@ -14,8 +14,6 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
         ui->statusbar->showMessage("Successful connect to DB: " + db->databasePath());
         // создаем динамическую модель БД, указав родителя
         connectionModel = new QSqlQueryModel(this);
-        // обновляем данные таблицы
-        updateTable();
         // указываем куда будем выводить данные
         ui->connectionsView->setModel(connectionModel);
         // выделяем всю строку, а не отдельно ячейку при нажатии мышью
@@ -194,7 +192,7 @@ void MainWindow::on_btnAddData_clicked()
         return;
     }
 
-    updateTable();
+
 }
 
 void MainWindow::on_btnAddConnection_clicked()
@@ -216,51 +214,6 @@ void MainWindow::on_btnAddConnection_clicked()
     {
         loadConnections(substationId);
     }
-}
-
-// метод вызова вывода необходимого содержания БД
-void MainWindow::updateTable() const
-{
-    QSqlQuery query;
-
-    query.prepare("SELECT m.name, s.name, ("
-	                "SELECT GROUP_CONCAT(voltage_level, '/') "
-	               "FROM ("
-		                "SELECT voltage_level "
-		                "FROM substation_voltages sv "
-		                "WHERE substation_id = s.id "
-		                "ORDER BY voltage_level DESC "
-		                ")"
-	                ") || ' кВ' AS voltages "
-	                "FROM substations s "
-	                "LEFT JOIN maintance m "
-	                "ON s.maintance_id = m.id "
-	                "ORDER BY s.name;"
-                  );
-
-    // Выполняем запрос
-    if (query.exec()) {
-        qDebug() << "Database read successfully";
-
-    } else {
-        qDebug() << "Error reading record:\n" + query.lastError().text();
-        return;
-    }
-
-    // передаем в модель получившуюся таблицу
-    connectionModel->setQuery(std::move(query));
-
-    // меняем названия столбцов
-    connectionModel->setHeaderData(
-        0, Qt::Horizontal, "Предприятие");
-    connectionModel->setHeaderData(
-        1, Qt::Horizontal, "Название ПС");
-    connectionModel->setHeaderData(
-        2, Qt::Horizontal, "Напряжение");
-
-
-
-
 }
 
 // метод загрузки списка подстанций
@@ -312,12 +265,23 @@ void MainWindow::loadConnections(int substationId) const
     QSqlQuery connectionQuery(db->getDatabase());
     // подготавливаем запрос
     connectionQuery.prepare("SELECT "
-                            "c.id, ct.name AS type, c.name, c.voltage_level "
+                            "c.id, ct.name AS type, c.name, "
+                            "("
+                                "SELECT GROUP_CONCAT(voltage_level, '/') "
+                                "FROM ("
+                                    "SELECT sv.voltage_level "
+                                    "FROM connection_voltages cv "
+                                    "JOIN substation_voltages sv "
+                                        "ON sv.id = cv.substation_voltage_id "
+                                    "WHERE cv.connection_id = c.id "
+                                    "ORDER BY CAST(sv.voltage_level AS INTEGER) DESC"
+                                ")"
+                            ") || ' кВ' AS voltage "
                             "FROM connections c "
                             "LEFT JOIN connection_types ct "
-                            "ON c.type_id = ct.id "
+                            "ON ct.id = c.type_id "
                             "WHERE c.substation_id = :substationId "
-                            "ORDER BY c.voltage_level DESC, c.name;"
+                            "ORDER BY c.name;"
                             );
     // вставляем данные в запрос
     connectionQuery.bindValue(":substationId", substationId);
@@ -328,7 +292,7 @@ void MainWindow::loadConnections(int substationId) const
         qDebug() << connectionQuery.lastError().text();
         return;
     }
-    // вставляем резульат в окно
+    // вставляем результат в окно
     connectionModel->setQuery(std::move(connectionQuery));
     // задаем названия столбцам
     connectionModel->setHeaderData(1, Qt::Horizontal, "Тип");

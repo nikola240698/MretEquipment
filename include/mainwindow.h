@@ -58,13 +58,12 @@ private:
     //переменная для определения номера текущей строки
     int currentRow;
 
-    // метод обновдения таблицы
-    void updateTable() const;
-    // меод загрузки подстанций при выборе предприятия
+
+    // метод загрузки подстанций при выборе предприятия
     void loadSubstations(int enterpriseId);
     // метод загрузки присоединений
     void loadConnections(int substationId) const;
-    //  етод двойного нажатия на присоединение из списка
+    //  метод двойного нажатия на присоединение из списка
     void onConnectionDoubleClicked(const QModelIndex &index) const;
 };
 #endif // MAINWINDOW_H

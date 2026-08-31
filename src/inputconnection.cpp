@@ -1,16 +1,37 @@
 
 #include "inputconnection.h"
+
+#include <QCheckBox>
+
 #include "ui_inputconnection.h"
 
 // конструктор класса
-InputConnection::InputConnection(int inSubstationId, Database *inDb, QWidget *parent)
-: QDialog(parent), ui(new Ui::InputConnection), db(inDb), substationId(inSubstationId)
+InputConnection::InputConnection(
+    int inSubstationId,
+    Database *inDb,
+    QWidget *parent
+    )
+        : QDialog(parent),
+        ui(new Ui::InputConnection),
+        db(inDb),
+        substationId(inSubstationId)
 {
     ui->setupUi(this);
 
+    // название окна
+    setWindowTitle("Adding connection");
+
+    // по умолчанию скрываем оба элемента
+    // после выбора типа необходимы отобразится
+    ui->voltageBox->hide();
+    ui->voltageGroupBox->hide();
+
+
     // вызываем методы отображения данных по выбранной ПС
-    loadConnectionTypes();
+    // порядок из очень важен, сначала нам необходимы напряжения
     loadVoltageLevel();
+    loadConnectionTypes();
+
 }
 
 // деструктор класса
@@ -19,46 +40,92 @@ InputConnection::~InputConnection()
     delete ui;
 }
 
+// слот выбора типа оборудования
+void InputConnection::on_typeBox_currentIndexChanged(int index)
+{
+    if (index < 0)
+    {
+        ui->voltageBox->hide();
+        ui->voltageGroupBox->hide();
+        return;
+    }
+
+    const bool multipleVoltages = ui->typeBox->itemData(index, Qt::UserRole + 1).toBool();
+
+    ui->voltageBox->setVisible(!multipleVoltages);
+    ui->voltageGroupBox->setVisible(multipleVoltages);
+}
+
 // метод загрузки типов присоединения
-void InputConnection::loadConnectionTypes() const
+void InputConnection::loadConnectionTypes()
 {
     // очищаем список
     ui->typeBox->clear();
     // создаем запрос
     QSqlQuery connectionQuery(db->getDatabase());
-    // проверяемЮ что запрос можно выполнить
-    if (!connectionQuery.exec(
+
+    // подготавливаем запрос
+    connectionQuery.prepare(
         // выводим все данные из таблицы
-        "SELECT id, name "
+        "SELECT id, name, multiple_voltages "
         "FROM connection_types "
-        "ORDER BY name;"))
+        "ORDER BY name;");
+
+    // проверяем, что запрос можно выполнить
+    if (!connectionQuery.exec())
     {
         // выводим сообщение при ошибке открытия
-        qDebug() << "In connection types query: " << connectionQuery.lastError().text();
+        qDebug() << "Error loading connection types: " << connectionQuery.lastError().text();
         return;
     }
 
-    // заполняем выпадающий список полученными данными
+    // заполняем полученные данные в необходимые объекты
     while (connectionQuery.next())
     {
-        // добавляем и имя и Id
-        ui->typeBox->addItem(
-            connectionQuery.value("name").toString(),
-            connectionQuery.value("id").toInt()
-        );
+        // получаем id типа оборудования
+        const int id = connectionQuery.value("id").toInt();
+        // получаем название типа оборудования
+        const QString name = connectionQuery.value("name").toString();
+        // получаем переменную количества имеющихся уровней напряжения
+        const bool multipleVoltages = connectionQuery.value("multiple_voltages").toBool();
+
+        // добавляем название в бокс
+        ui->typeBox->addItem(name);
+
+        const int index = ui->typeBox->count() - 1;
+
+        // получаем id типа
+        ui->typeBox->setItemData(index, id, Qt::UserRole);
+
+        // проверяем может ли иметь несколько уровней напряжения
+        ui->typeBox->setItemData(index, id, Qt::UserRole);
+
+        // обновляем интерфейс
+        if (ui->typeBox->count() > 0)
+        {
+            on_typeBox_currentIndexChanged(ui->typeBox->currentIndex());
+        }
     }
 }
 
 // метод загрузки уровней напряжения
-void InputConnection::loadVoltageLevel() const
+void InputConnection::loadVoltageLevel()
 {
     // очищаем список
     ui->voltageBox->clear();
+
+    // удаляем старые чекбоксы если они существовали
+    for (QCheckBox *checkBox : voltageCheckBoxes)
+    {
+        delete checkBox;
+    }
+    voltageCheckBoxes.clear();
+
     // создаем запрос
     QSqlQuery voltageQuery(db->getDatabase());
     // подготавливаем запрос
     voltageQuery.prepare (
-        "SELECT voltage_level "
+        "SELECT id, voltage_level "
         "FROM substation_voltages "
         "WHERE substation_id = :substationId "
         "ORDER BY CAST(voltage_level AS INTEGER) DESC;");
@@ -70,18 +137,69 @@ void InputConnection::loadVoltageLevel() const
     if (!voltageQuery.exec())
     {
         // выводим ошибку
-        qDebug() << "In voltage level DB: " << voltageQuery.lastError().text();
+        qDebug() << "Error loading voltage levels: " << voltageQuery.lastError().text();
         return;
     }
 
     // заполняем выпадающий список данными из запроса
     while (voltageQuery.next())
     {
-        // получаем значения напряжения в целочисленном типе
-        int voltage = voltageQuery.value("voltage_level").toInt();
-        // вставляем данные прибавляя приставку в конце
-        ui->voltageBox->addItem(QString::number(voltage) + " кВ", voltage);
+
+        const int voltageId = voltageQuery.value("id").toInt();
+
+        const int voltage = voltageQuery.value("voltage_level").toInt();
+
+        const QString text = QString::number(voltage) + " кВ";
+
+        // для списка напряжений
+        ui->voltageBox->addItem(text, voltageId);
+
+        // для создания checkBox'ов
+        auto *checkBox = new QCheckBox(text, ui->voltageGroupBox);
+
+        // получаем id строки
+        checkBox->setProperty("voltage_id", voltageId);
+
+        // добавляем виджет
+        ui->voltageLayout->addWidget(checkBox);
+
+        voltageCheckBoxes.append(checkBox);
     }
+}
+
+// метод получения выбранного напряжения
+QList<int> InputConnection::getSelectedVoltageIds() const
+{
+    QList<int> voltageIds;
+
+    const int index = ui->typeBox->currentIndex();
+
+    if (index < 0)
+        return voltageIds;
+
+    const bool multipleVoltages = ui->typeBox->itemData(index, Qt::UserRole + 1).toBool();
+
+    // если одно напряжения
+    if (!multipleVoltages)
+    {
+        if (ui->voltageBox->currentIndex() >= 0)
+        {
+            voltageIds.append(ui->voltageBox->currentData().toInt());
+        }
+
+        return voltageIds;
+    }
+
+    // несколько напряжений
+    for (QCheckBox *checkBox : voltageCheckBoxes)
+    {
+        if (checkBox->isChecked())
+        {
+            voltageIds.append(checkBox->property("voltageId").toInt());
+        }
+    }
+
+    return voltageIds;
 }
 
 // слот нажатия на кнопку отмены
@@ -94,37 +212,112 @@ void InputConnection::on_btnClose_clicked()
 // слот нажатия кнопки сохранения
 void InputConnection::on_btnSave_clicked()
 {
-    // проверяем, что имя введено
-    if (ui->ledtName->text().trimmed().isEmpty())
+    // проверка названия
+
+    const QString name = ui->ledtName->text().trimmed();
+    if (name.isEmpty())
     {
-        QMessageBox::warning(this, "Error name", "Input name of the connection");
+        QMessageBox::warning(this, "Error", "Input the connection name.");
         return;
     }
-    // получаем id типа присоединения
-    int typeId = ui->typeBox->currentData().toInt();
-    // получаем id уровня напряжения
-    int voltage = ui->voltageBox->currentData().toInt();
-    // получем название присоединения
-    QString name = ui->ledtName->text().trimmed();
-    // создаем запрос
-    QSqlQuery query(db->getDatabase());
-    // подготавливаем запрос
-    query.prepare("INSERT INTO connections "
-                  "(substation_id, type_id, name, voltage_level) "
-                  "VALUES "
-                  "(:substationId, :typeId, :name, :voltage);");
-    // вставляем данные в запрос
-    query.bindValue(":substationId", substationId);
-    query.bindValue(":typeId", typeId);
-    query.bindValue(":name", name);
-    query.bindValue(":voltage", voltage);
-    // проверяем его возможность исполнения
-    if (!query.exec())
+
+    // проверка типа
+    if (ui->typeBox->currentIndex() < 0)
     {
-        QMessageBox::critical(this, "Error save", query.lastError().text());
+        QMessageBox::warning(this, "Error", "Select the type of the connection");
         return;
     }
-    // закрываем окно с применением данных
+
+    const int typeId = ui->typeBox->currentData(Qt::UserRole + 1).toBool();
+    const bool multipleVoltages = ui->typeBox->currentData(Qt::UserRole + 1).toBool();
+
+    // получаем напряжение
+    const QList<int> voltagesIds = getSelectedVoltageIds();
+
+    // обычное присоединение
+    if (!multipleVoltages && voltagesIds.size() != 1)
+    {
+        QMessageBox::warning(this, "Error", "Select voltage level.");
+        return;
+    }
+
+    // многоуровненвое напряжение
+    if (multipleVoltages && voltagesIds.size() < 2)
+    {
+        QMessageBox::warning(this, "Error", "Select minimum two voltage level");
+        return;
+    }
+
+    // начинаем транзакцию
+    if (!db->transaction())
+    {
+        QMessageBox::critical(this, "Error", db->lastError());
+        return;
+    }
+
+    // добавляем присоединение
+    QSqlQuery connectionQuery(db->getDatabase());
+
+    connectionQuery.prepare(
+        "INSERT INTO connections "
+        "(substation_id, type_id, name) "
+        "VALUES "
+        "(:substationId, :typeId, :name);"
+        );
+
+    connectionQuery.bindValue(":substationId", substationId);
+
+    connectionQuery.bindValue(":typeId", typeId);
+
+    connectionQuery.bindValue(":name", name);
+
+    if (!connectionQuery.exec())
+    {
+        db->rollback();
+
+        QMessageBox::critical(this, "Adding connection error",
+            connectionQuery.lastError().text());
+        return;
+    }
+
+    const int connectionId = connectionQuery.lastInsertId().toInt();
+
+    // добавляем напряжение
+
+    QSqlQuery voltageQuery(db->getDatabase());
+
+    voltageQuery.prepare(
+        "INSERT INTO connection_voltages "
+        "(connection_id, substation_voltage_id) "
+        "VALUES "
+        "(:connectionId, :voltageId);"
+        );
+
+    for (const int voltageId : voltagesIds)
+    {
+        voltageQuery.bindValue(":connectionId", connectionId);
+
+        voltageQuery.bindValue(":voltageId", voltageId);
+
+        if (!voltageQuery.exec())
+        {
+            db->rollback();
+
+            QMessageBox::critical(this, "Adding voltage error",
+                voltageQuery.lastError().text());
+            return;
+        }
+    }
+
+    // подтверждаем транзакцию
+    if (!db->commit())
+    {
+        db->rollback();
+
+        QMessageBox::critical(this, "Error", db->lastError());
+        return;
+    }
+
     accept();
 }
 

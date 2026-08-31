@@ -39,6 +39,13 @@ public:
 
     ~InputConnection() override;
 
+private slots:
+    // слот при выборе типа присоединения для отображения возможных напряжений
+    void on_typeBox_currentIndexChanged(int index);
+    // слот нажатия кнопки отмены
+    void on_btnClose_clicked();
+    // слот нажатия кнопки сохранения
+    void on_btnSave_clicked();
 
 private:
     Ui::InputConnection *ui;
@@ -46,16 +53,18 @@ private:
     Database *db;
     int substationId;
 
-    // метод загрузки типов присоединения
-    void loadConnectionTypes() const;
-    // метод загрузки уровней напряжения
-    void loadVoltageLevel() const;
+    // динамическое создание checkBox для выбора уровней напряжения
+    QList<QCheckBox *> voltageCheckBoxes;
 
-private slots:
-    // слот нажатия кнопки отмены
-    void on_btnClose_clicked();
-    // слот нажатия кнопки сохранения
-    void on_btnSave_clicked();
+    // метод загрузки типов присоединения
+    void loadConnectionTypes();
+    // метод загрузки уровней напряжения
+    void loadVoltageLevel();
+
+    // метод получения выбранных уровней напряжения
+    QList<int> getSelectedVoltageIds() const;
+
+
 
 };
 
