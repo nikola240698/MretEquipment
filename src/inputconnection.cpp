@@ -45,8 +45,7 @@ void InputConnection::on_typeBox_currentIndexChanged(int index)
 {
     if (index < 0)
     {
-        ui->voltageBox->hide();
-        ui->voltageGroupBox->hide();
+
         return;
     }
 
@@ -54,6 +53,9 @@ void InputConnection::on_typeBox_currentIndexChanged(int index)
 
     ui->voltageBox->setVisible(!multipleVoltages);
     ui->voltageGroupBox->setVisible(multipleVoltages);
+
+    adjustSize();
+    setFixedSize(sizeHint());
 }
 
 // метод загрузки типов присоединения
@@ -98,13 +100,14 @@ void InputConnection::loadConnectionTypes()
         ui->typeBox->setItemData(index, id, Qt::UserRole);
 
         // проверяем может ли иметь несколько уровней напряжения
-        ui->typeBox->setItemData(index, id, Qt::UserRole + 1);
+        ui->typeBox->setItemData(index, multipleVoltages, Qt::UserRole + 1);
 
-        // обновляем интерфейс
-        if (ui->typeBox->count() > 0)
-        {
-            on_typeBox_currentIndexChanged(ui->typeBox->currentIndex());
-        }
+
+    }
+    // обновляем интерфейс
+    if (ui->typeBox->count() > 0)
+    {
+        on_typeBox_currentIndexChanged(ui->typeBox->currentIndex());
     }
 }
 

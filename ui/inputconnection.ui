@@ -105,19 +105,8 @@
        <item>
         <widget class="QGroupBox" name="voltageGroupBox">
          <property name="title">
-          <string>GroupBox</string>
+          <string/>
          </property>
-         <widget class="QWidget" name="verticalLayoutWidget_2">
-          <property name="geometry">
-           <rect>
-            <x>50</x>
-            <y>0</y>
-            <width>160</width>
-            <height>80</height>
-           </rect>
-          </property>
-          <layout class="QVBoxLayout" name="voltageLayout"/>
-         </widget>
         </widget>
        </item>
       </layout>
