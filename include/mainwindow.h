@@ -17,6 +17,7 @@
 #include "inputconnection.h"
 // подключаем класс базы данных
 #include "database.h"
+#include "connectionwindow.h"
 
 
 
@@ -64,6 +65,6 @@ private:
     // метод загрузки присоединений
     void loadConnections(int substationId) const;
     //  метод двойного нажатия на присоединение из списка
-    void onConnectionDoubleClicked(const QModelIndex &index) const;
+    void onConnectionDoubleClicked(const QModelIndex &index);
 };
 #endif // MAINWINDOW_H

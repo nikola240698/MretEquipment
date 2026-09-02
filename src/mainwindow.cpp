@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+
+
 #include <QDebug>
 
 MainWindow::MainWindow(Database *inDb, QWidget *parent)
@@ -19,7 +21,7 @@ MainWindow::MainWindow(Database *inDb, QWidget *parent)
         // выделяем всю строку, а не отдельно ячейку при нажатии мышью
         ui->connectionsView->setSelectionBehavior(QAbstractItemView::SelectRows);
         //запрещаем редактирование
-        ui->connectionsView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui->connectionsView->setEditTriggers(QAbstractItemView::NoEditTriggers);
         // разрешаем сортировку по столбцам
         ui->connectionsView->setSortingEnabled(true);
         // изменяем размер столбцов таблицы
@@ -297,12 +299,12 @@ void MainWindow::loadConnections(int substationId) const
     // задаем названия столбцам
     connectionModel->setHeaderData(1, Qt::Horizontal, "Тип");
     connectionModel->setHeaderData(2, Qt::Horizontal, "Наименование");
-    connectionModel->setHeaderData(3, Qt::Horizontal, "U, кВ");
+    connectionModel->setHeaderData(3, Qt::Horizontal, "Напряжение");
     // скрываем столбец id
     ui->connectionsView->setColumnHidden(0, true);
 }
 // метод двойного нажатия на присоединение из списка
-void MainWindow::onConnectionDoubleClicked(const QModelIndex &index) const
+void MainWindow::onConnectionDoubleClicked(const QModelIndex &index)
 {
     // получаем индекс строки
     int row = index.row();
@@ -310,6 +312,14 @@ void MainWindow::onConnectionDoubleClicked(const QModelIndex &index) const
     int connectionId = connectionModel->data(connectionModel->index(row, 0)).toInt();
     // выводим сообщение о выбранном присоединении
     qDebug() << "Opening connection: " << connectionId;
+
+
+    ConnectionWindow connectionWindow(connectionId, db, this);
+
+    connectionWindow.exec();
+
+
+
 }
 
 
