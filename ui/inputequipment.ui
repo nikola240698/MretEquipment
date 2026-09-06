@@ -16,6 +16,29 @@
   <layout class="QGridLayout" name="gridLayout_2">
    <item row="0" column="0" colspan="3">
     <layout class="QGridLayout" name="gridLayout">
+     <item row="4" column="1">
+      <widget class="QLineEdit" name="ledtInventoryNumber"/>
+     </item>
+     <item row="5" column="1">
+      <widget class="QSpinBox" name="spbYearManufactured">
+       <property name="maximum">
+        <number>9999</number>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="parentEquipmentBox"/>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="typeBox"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Инвентарный номер</string>
+       </property>
+      </widget>
+     </item>
      <item row="6" column="0">
       <widget class="QLabel" name="label_7">
        <property name="text">
@@ -23,17 +46,23 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Тип оборудования:</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>Наименование:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="ledtManufacturer"/>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="ledtSerialNumber"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Заводской номер</string>
        </property>
       </widget>
      </item>
@@ -47,20 +76,10 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QComboBox" name="typeBox"/>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>Заводской номер</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Инвентарный номер</string>
+        <string>Производитель</string>
        </property>
       </widget>
      </item>
@@ -71,30 +90,15 @@
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_4">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
        <property name="text">
-        <string>Производитель</string>
+        <string>Тип оборудования:</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="ledtSerialNumber"/>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLineEdit" name="ledtManufacturer"/>
-     </item>
-     <item row="4" column="1">
-      <widget class="QLineEdit" name="ledtInventoryNumber"/>
-     </item>
-     <item row="6" column="1">
-      <widget class="QComboBox" name="parentEquipmentBox"/>
-     </item>
      <item row="7" column="1">
       <widget class="QTextEdit" name="tedtNote"/>
-     </item>
-     <item row="5" column="1">
-      <widget class="QSpinBox" name="spbYearManufactured"/>
      </item>
     </layout>
    </item>
@@ -127,6 +131,17 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>typeBox</tabstop>
+  <tabstop>ledtName</tabstop>
+  <tabstop>ledtSerialNumber</tabstop>
+  <tabstop>ledtManufacturer</tabstop>
+  <tabstop>ledtInventoryNumber</tabstop>
+  <tabstop>spbYearManufactured</tabstop>
+  <tabstop>parentEquipmentBox</tabstop>
+  <tabstop>btnSave</tabstop>
+  <tabstop>btnClose</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -6,6 +6,9 @@
 #include <QDialog>
 #include <QSqlQueryModel>
 #include <QSqlQuery>
+#include <QStandardItem>
+#include <QHash>
+#include <QStandardItemModel>
 
 #include "Database.h"
 
@@ -47,7 +50,7 @@ private:
 
     Ui::ConnectionWindow *ui;
     // указатель на QTableView в окне
-    QSqlQueryModel *equipmentModel;
+    QStandardItemModel *equipmentModel;
 };
 
 

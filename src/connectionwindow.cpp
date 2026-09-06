@@ -17,11 +17,11 @@
 ConnectionWindow::ConnectionWindow(int inConnectionId, Database *inDb, QWidget *parent)
     : QDialog(parent), db(inDb), connectionId(inConnectionId), ui(new Ui::ConnectionWindow)
 {
-
+    // настраиваем модель
     ui->setupUi(this);
-
-    equipmentModel = new QSqlQueryModel(this);
-
+    // создаем динамически нашу таблицу результата запроса
+    equipmentModel = new QStandardItemModel(this);
+    // загружаем данные присоединения
     loadConnectionInfo();
 
     // назначаем нашу модель в QTableView
@@ -33,6 +33,11 @@ ConnectionWindow::ConnectionWindow(int inConnectionId, Database *inDb, QWidget *
     // запрещаем изменять данные в таблице
     ui->equipmentView->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
+    ui->equipmentView->setStyleSheet(
+        "QTreeView::item { padding: 4px 0px; }"
+    );
+
+    // загружаем существующее оборудование присоединения
     loadEquipment();
 
 }
@@ -51,10 +56,12 @@ void ConnectionWindow::on_btnClose_clicked()
 // метод нажатия кнопки Add
 void ConnectionWindow::on_btnAddEquipment_clicked()
 {
+    // создаем динамически наше окно
     InputEquipment dialog(connectionId, db, this);
-
+    // проверяем, что оно удачно выполнено
     if (dialog.exec() == QDialog::Accepted)
     {
+        // заново загружаем список оборудования
         loadEquipment();
     }
 }
@@ -62,8 +69,9 @@ void ConnectionWindow::on_btnAddEquipment_clicked()
 // метод загрузки информации о присоединении
 void ConnectionWindow::loadConnectionInfo()
 {
+    // создаем запрос
     QSqlQuery query(db->getDatabase());
-
+    // подготоавливаем запрос
     query.prepare(
             "SELECT "
                 "c.name AS connection_name, "
@@ -85,22 +93,20 @@ void ConnectionWindow::loadConnectionInfo()
             "WHERE c.id = 2;"
     );
 
-
+    // биндим переменные
     query.bindValue(":connectionId", connectionId);
-
-
-
+    // пробуем выполнить запрос
     if (!query.exec())
     {
         QMessageBox::warning(this, "Error", query.lastError().text());
         return;
     }
-
+    // проверяем, что что-то найдено
     if (!query.next())
     {
         QMessageBox::warning(this, "Error", "Connection not found");
     }
-
+    // вставляем найденные значения в форму
     ui->lblConnectionName->setText(query.value("connection_name").toString());
 
     ui->lblConnectionType->setText(query.value("connection_type").toString());
@@ -108,54 +114,145 @@ void ConnectionWindow::loadConnectionInfo()
     ui->lblConnectionVoltage->setText(query.value("voltage").toString());
 }
 
+// метод загрузки оборудования выбранного присоединения
 void ConnectionWindow::loadEquipment()
 {
-    QSqlQuery query(db->getDatabase());
+    equipmentModel->clear();
 
+    equipmentModel->setHorizontalHeaderLabels(
+        {
+            "Оборудование",
+            "Заводской №",
+            "Производитель"
+        }
+    );
+
+
+
+    // создаем запрос
+    QSqlQuery query(db->getDatabase());
+    // подготавливаем запрос
     query.prepare(
         "SELECT "
             "e.id, "
-            "et.name AS equipment_type, "
+            "e.parent_equipment_id, "
             "e.name, "
             "e.serial_number, "
             "e.manufacturer, "
-            "e.inventory_number, "
-            "e.year_manufactured "
+            "et.name AS equipment_type "
         "FROM equipment e "
         "JOIN equipment_types et "
             "ON et.id = e.equipment_type_id "
         "WHERE e.connection_id = :connectionId "
-        "ORDER BY et.name, e.name;");
-
-    query.bindValue("connectionId", connectionId);
-
+        "ORDER BY et.name, e.name;"
+    );
+    // биндим переменные
+    query.bindValue(":connectionId", connectionId);
+    // пробуем выполнить запрос
     if (!query.exec())
     {
         qDebug() << "Error loading equipment: " << query.lastError().text();
         return;
     }
+    struct EquipmentItem
+    {
+        int id;
+        QVariant parentId;
 
+        QStandardItem *nameItem;
+        QStandardItem *serialItem;
+        QStandardItem *manufacturerItem;
+    };
 
-    equipmentModel->setQuery(std::move(query));
+    QList<EquipmentItem> items;
 
+    QHash<int, QStandardItem *> itemMap;
 
-    ui->equipmentView->setModel(equipmentModel);
+    while (query.next())
+    {
+        const int id = query.value("id").toInt();
 
-    ui->equipmentView->setColumnHidden(0, true);
+        const QVariant parentId = query.value("parent_equipment_id");
 
+        const QString type = query.value("equipment_type").toString();
 
+        const QString name = query.value("name").toString();
 
-    equipmentModel->setHeaderData(1, Qt::Horizontal, "Тип");
-    equipmentModel->setHeaderData(2, Qt::Horizontal, "Наименование");
-    equipmentModel->setHeaderData(3, Qt::Horizontal, "Заводской №");
-    equipmentModel->setHeaderData(4, Qt::Horizontal, "Производитель");
-    equipmentModel->setHeaderData(5, Qt::Horizontal, "Инвентарный №");
-    equipmentModel->setHeaderData(6, Qt::Horizontal, "Год выпуска");
+        const QString serial = query.value("serial_number").toString();
 
-    ui->equipmentView->setColumnHidden(0, true);
+        const QString manufacturer = query.value("manufacturer").toString();
 
-    ui->equipmentView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        auto *nameItem = new QStandardItem(type + " - " + name);
 
-    ui->equipmentView->horizontalHeader()->setStretchLastSection(true);
+        auto *serialItem = new QStandardItem(serial);
+
+        auto *manufacturerItem = new QStandardItem(manufacturer);
+
+        nameItem->setData(id, Qt::UserRole);
+
+        itemMap.insert(id, nameItem);
+
+        items.append(
+            {
+                id,
+                parentId,
+                nameItem,
+                serialItem,
+                manufacturerItem
+            }
+        );
+
+    }
+
+    for (const EquipmentItem &equipment : items)
+    {
+        QList<QStandardItem *> row;
+
+        row
+            << equipment.nameItem
+            << equipment.serialItem
+            << equipment.manufacturerItem;
+
+        if (equipment.parentId.isNull() || !equipment.parentId.isValid())
+        {
+            equipmentModel->appendRow(row);
+        } else
+        {
+            const int parentId = equipment.parentId.toInt();
+
+            QStandardItem* parentItem = itemMap.value(parentId);
+
+            if (parentItem)
+            {
+                parentItem->appendRow(row);
+            } else
+            {
+                // если ссылка повреждена
+                equipmentModel->appendRow(row);
+            }
+        }
+    }
+
+    ui->equipmentView->expandAll();
+
+    ui->equipmentView->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+    ui->equipmentView->header()->setStretchLastSection(true);
+
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

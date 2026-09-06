@@ -44,7 +44,9 @@ private:
     Database* db;
     int connectionId;
 
+    // метод загрузки типов оборудования для выпадающего списка
     void loadEquipmentTypes();
+    // метод загрузки родительских типов оборудования, для создания зависимостей
     void loadParentEquipment();
 };
 
