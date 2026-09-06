@@ -35,6 +35,8 @@ private slots:
     void on_btnAddEquipment_clicked();
     // метод загрузки информации о присоединении
     void loadConnectionInfo();
+    // метод загрузки оборудования присоединения
+    void loadEquipment();
 
 
 

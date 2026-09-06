@@ -15,12 +15,14 @@ add_executable(MretEquipment
         inputconnection.cpp
         inputsubstation.cpp
         connectionwindow.cpp
+        inputequipment.cpp
 
         ${MY_UI_DIR}/inputdata.ui
         ${MY_UI_DIR}/mainwindow.ui
         ${MY_UI_DIR}/inputconnection.ui
         ${MY_UI_DIR}/inputsubstation.ui
         ${MY_UI_DIR}/connectionwindow.ui
+        ${MY_UI_DIR}/inputequipment.ui
 
         ${MY_INCLUDE_DIR}/mainwindow.h
         ${MY_INCLUDE_DIR}/inputdata.h
@@ -28,6 +30,7 @@ add_executable(MretEquipment
         ${MY_INCLUDE_DIR}/inputconnection.h
         ${MY_INCLUDE_DIR}/inputsubstation.h
         ${MY_INCLUDE_DIR}/connectionwindow.h
+        ${MY_INCLUDE_DIR}/inputequipment.h
 )
 
 # Подключаем папку include, заданную в корневом CMakeLists.txt
